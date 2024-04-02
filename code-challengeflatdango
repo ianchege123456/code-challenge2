@@ -1,0 +1,94 @@
+document.addEventListener('DOMContentLoaded', async () => {
+    const BASE_URL = 'http://localhost:3000';
+
+    // Function to make GET requests
+    const fetchData = async (url) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    // Function to render film details
+    const renderFilmDetails = async () => {
+        try {
+            const film = await fetchData(`${BASE_URL}/films/1`);
+            const availableTickets = film.capacity - film.tickets_sold;
+            
+            // Render film details on the page
+            const filmDetailsElement = document.getElementById('filmDetails');
+            filmDetailsElement.innerHTML = `
+                <img src="${film.poster}" alt="Movie Poster">
+                <h2>${film.title}</h2>
+                <p>Runtime: ${film.runtime} minutes</p>
+                <p>Showtime: ${film.showtime}</p>
+                <p>Available Tickets: ${availableTickets}</p>
+            `;
+        } catch (error) {
+            console.error('Error rendering film details:', error);
+        }
+    };
+
+    // Function to render films menu
+    const renderFilmsMenu = async () => {
+        try {
+            const films = await fetchData(`${BASE_URL}/films`);
+            const filmsMenuElement = document.getElementById('filmsMenu');
+            
+            // Render films menu on the page
+            films.forEach(film => {
+                const li = document.createElement('li');
+                li.classList.add('film', 'item');
+                li.textContent = film.title;
+                filmsMenuElement.appendChild(li);
+            });
+        } catch (error) {
+            console.error('Error rendering films menu:', error);
+        }
+    };
+
+    // Function to buy a ticket for a movie
+    const buyTicket = async () => {
+        try {
+            const film = await fetchData(`${BASE_URL}/films/1`);
+            const availableTickets = film.capacity - film.tickets_sold;
+            
+            if (availableTickets > 0) {
+                // Ticket available, decrement tickets_sold and update UI
+                const newTicketsSold = film.tickets_sold + 1;
+                await fetch(`${BASE_URL}/films/${film.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ tickets_sold: newTicketsSold }),
+                });
+                renderFilmDetails(); // Re-render film details to update available tickets
+            } else {
+                // No tickets available, show error message
+                console.log('No tickets available for this movie.');
+            }
+        } catch (error) {
+            console.error('Error buying ticket:', error);
+        }
+    };
+
+    // Event listener for clicking "Buy Ticket" button
+    const buyTicketButton = document.getElementById('buyTicketButton');
+    buyTicketButton.addEventListener('click', buyTicket);
+
+    // Initialize the application
+    renderFilmDetails();
+    renderFilmsMenu();
+});
+
+
+
+
+  
+  
